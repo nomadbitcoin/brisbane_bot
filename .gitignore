@@ -1,0 +1,8 @@
+#whatsapp profile
+*whatsapp_nabike/*
+
+#jupyter files
+*.ipynb_checkpoints/*
+
+#virtual ambient
+*brisbane/*
