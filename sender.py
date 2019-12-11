@@ -1,16 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
-# In[4]:
+# In[1]:
 
-
-import bs4
 import time
 import os
 import random
 
 
-# In[3]:
+# In[2]:
 
 
 from selenium import webdriver
@@ -30,13 +28,15 @@ driver = webdriver.Chrome(options=options, executable_path="./webdriver/chromedr
 driver.get('https://web.whatsapp.com/')
 
 
-# In[ ]:
-
-
-input('pressione enter se o Whatsapp Web já estiver aberto: \n')
-
-
 # In[3]:
+
+
+input('pressione enter para continuar se o Whatsapp Web já estiver aberto: \n')
+
+input('o cardapio ja esta na area de copia? (ctrl+c & ctrl+v): \n')
+
+
+# In[4]:
 
 
 def scrollChats_to_end():
@@ -47,7 +47,7 @@ def scrollChats_to_end():
         print('algo deu errado ao dar scroll')
 
 
-# In[4]:
+# In[5]:
 
 
 def controlConection(up_or_down):
@@ -60,7 +60,7 @@ def controlConection(up_or_down):
         print('Erro conexao')
 
 
-# In[5]:
+# In[7]:
 
 
 def sendImage():
@@ -73,28 +73,31 @@ def sendImage():
             #se o identificador de horario nao for encontrado o find retorna -1
     
             print('enviando cardapio para: {}'.format(name))
-            try:
-                contact.find_elements_by_css_selector('span._3NWy8')[0].click()
-                time.sleep(1)
-                driver.find_element_by_xpath("//div[@class='_13mgZ']").send_keys(Keys.CONTROL + "v")
-                time.sleep(1)
-                driver.find_element_by_xpath("//div[@class='rK2ei USE1O']").find_element_by_xpath("//div[@class='iA40b']").click()
-                enviados.append(name)
-            except KeyboardInterrupt:
-                print('stopped Sender')
-                break
-            except:
-                print('houve algum problema')
-                nao_enviados.append(name)
-                pass
+            if name not in enviados:
+                try:
+                    contact.find_elements_by_css_selector('span._3NWy8')[0].click()
+                    time.sleep(1)
+                    driver.find_element_by_xpath("//div[@class='_13mgZ']").send_keys(Keys.CONTROL + "v")
+                    time.sleep(1)
+                    driver.find_element_by_xpath("//div[@class='rK2ei USE1O']").find_element_by_xpath("//div[@class='iA40b']").click()
+                    enviados.append(name)
+                    rounds +=1
+                except KeyboardInterrupt:
+                    print('stopped Sender')
+                    break
+                except:
+                    print('houve algum problema')
+                    nao_enviados.append(name)
+                    pass
+            else:
+                print('ja enviado para: {}'.format(name))
             time.sleep(1)
-            rounds +=1
         except:
             pass
     return rounds
 
 
-# In[ ]:
+# In[8]:
 
 
 enviados = []
@@ -103,6 +106,7 @@ while True:
     try:
         shipped = 0
         scrollChats_to_end()
+        time.sleep(1)
         controlConection('down')
         
         #define um numero aleatorio de cardapios para enviar a cada conexao

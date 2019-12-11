@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Sender
+Comment=Enviar Cardapio
+Exec=/home/yan/Desktop/chatbot_whatsapp/brisbane_bot/sender.py
+Icon=konsole
+Terminal=true
+Type=Application
+Name[en_US]=Sender
+Name[pt_BR]=Sender
+
