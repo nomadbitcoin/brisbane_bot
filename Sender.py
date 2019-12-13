@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[1]:
+
 
 import time
 import os
@@ -31,9 +32,9 @@ driver.get('https://web.whatsapp.com/')
 # In[3]:
 
 
-input('pressione enter para continuar se o Whatsapp Web já estiver aberto: \n')
+# input('pressione enter para continuar se o Whatsapp Web já estiver aberto: \n')
 
-input('o cardapio ja esta na area de copia? (ctrl+c & ctrl+v): \n')
+# input('o cardapio ja esta na area de copia? (ctrl+c & ctrl+v): \n')
 
 
 # In[4]:
@@ -60,11 +61,12 @@ def controlConection(up_or_down):
         print('Erro conexao')
 
 
-# In[7]:
+# In[6]:
 
 
 def sendImage():
     rounds = 0
+    stop = 0
     for contact in driver.find_elements_by_xpath("//div[@class='X7YrQ']"):
         try:
             name = contact.find_elements_by_css_selector('span._3NWy8')[0].text
@@ -81,47 +83,88 @@ def sendImage():
                     time.sleep(1)
                     driver.find_element_by_xpath("//div[@class='rK2ei USE1O']").find_element_by_xpath("//div[@class='iA40b']").click()
                     enviados.append(name)
-                    rounds +=1
+                    stop = 0
+                    #se encontrar algum para enviar ira zerar o contador
                 except KeyboardInterrupt:
                     print('stopped Sender')
                     break
                 except:
-                    print('houve algum problema')
-                    nao_enviados.append(name)
-                    pass
+                    try:
+                        #tenta novamente clicar no botao enviar
+                        driver.find_element_by_xpath("//div[@class='rK2ei USE1O']").find_element_by_xpath("//div[@class='iA40b']").click()
+                        enviados.append(name)
+                    except:
+                        #se nao conseguir novamente, tentara apertar enter
+                        print('houve algum problema')
+                        pass
             else:
                 print('ja enviado para: {}'.format(name))
-            time.sleep(1)
+                stop +=1
+                if stop >=20:
+                    #se por 20 vezes ja tiver enviado o cardapio, chegou ao fim
+                    return 'break'
+            rounds +=1
         except:
             pass
+        
+        time.sleep(1)
+        scrollChats_to_end()
+        
+        
     return rounds
+
+
+# In[7]:
+
+
+# # enviados = []
+# run = True
+# while run:
+#     try:
+#         shipped = 0
+#         scrollChats_to_end()
+# #         controlConection('down')
+        
+#         #define um numero aleatorio de cardapios para enviar a cada conexao
+#         num_sends = int(random.randint(69,99))
+        
+        
+#         while shipped <= num_sends:
+#             total = sendImage()
+#             if total != 'break':
+#                 shipped = shipped + total
+#             else:
+#                 run = False
+#                 break
+
+#         # escolhe um tempo aleatorio em segundos entre 50 e 80s para que os cardapios sejam enviados apos conexao com internet
+# #         controlConection('up')
+        
+# #         time_to_wait = int(random.randint(50,80))
+# #         print('sending files...')
+        
+# #         time.sleep(time_to_wait)
+#         print('\n{} enviados ate o momendo'.format(len(enviados)))
+            
+#     except KeyboardInterrupt:
+#         print('stopped everything')
+#         break
 
 
 # In[8]:
 
 
 enviados = []
-nao_enviados = []
-while True:
+run = True
+scrollChats_to_end()
+while run:
     try:
-        shipped = 0
-        scrollChats_to_end()
-        time.sleep(1)
-        controlConection('down')
+        total = sendImage()
+        if total == 'break':
+            run = False
+            print('Programa Parado')
+            break
         
-        #define um numero aleatorio de cardapios para enviar a cada conexao
-        num_sends = int(random.randint(69,99))
-        
-        while shipped <= num_sends:
-            shipped = shipped + sendImage()
-
-        # escolhe um tempo aleatorio em segundos entre 50 e 80s para que os cardapios sejam enviados apos conexao com internet
-        controlConection('up')
-        
-        time_to_wait = int(random.randint(50,80))
-        print('sending files...')
-        
-        time.sleep(time_to_wait)
         print('\n{} enviados ate o momendo'.format(len(enviados)))
             
     except KeyboardInterrupt:
@@ -129,16 +172,10 @@ while True:
         break
 
 
-# In[6]:
-
-
-# controlConection('up')
-
-
 # In[ ]:
 
 
 #TO DO
+#salvar relatorio em csv
 #verica se ha o reloginho de enviando, se sim, clica no proximo contato, senao, insere em nao enviados
-#apos conexao verifica se as conversas tem o sinal de enviado, se sim, desliga e scrolla enviar
 
