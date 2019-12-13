@@ -1,4 +1,3 @@
-[17805:17825:1211/105845.277595:ERROR:nss_util.cc(750)] After loading Root Certs, loaded==false: NSS error code: -8018
-[17805:17819:1211/105845.360074:WARNING:spdy_session.cc(3324)] Received HEADERS for invalid stream 3
-[17864:7:1211/105845.482697:ERROR:child_process_sandbox_support_impl_linux.cc(81)] FontService unique font name matching request did not receive a response.
-[17864:7:1211/105845.483291:ERROR:child_process_sandbox_support_impl_linux.cc(81)] FontService unique font name matching request did not receive a response.
+[2485:2527:1213/081925.671106:ERROR:nss_util.cc(750)] After loading Root Certs, loaded==false: NSS error code: -8018
+[2552:7:1213/081926.335108:ERROR:child_process_sandbox_support_impl_linux.cc(81)] FontService unique font name matching request did not receive a response.
+[2552:7:1213/081926.335740:ERROR:child_process_sandbox_support_impl_linux.cc(81)] FontService unique font name matching request did not receive a response.
