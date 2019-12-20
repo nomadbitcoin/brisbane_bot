@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 # In[5]:
@@ -104,10 +104,10 @@ enviados = []
 while count < (chats - 2): #-2 porque tem dois grupos para os quais nao conseguira enviar
     time.sleep(1)
     scrollChats_to_end()
-    time.sleep(1)
+    time.sleep(1.5)
+    name = driver.find_element_by_xpath("//div[@class='_19vo_']").text
     if clic_contact() and name not in enviados:
         time.sleep(0.5)
-        name = driver.find_element_by_xpath("//div[@class='_19vo_']").text
         print('enviado cardapio para: {}'.format(count, name))
         sendImage(name)
         count +=1
