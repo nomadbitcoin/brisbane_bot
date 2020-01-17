@@ -1,10 +1,5 @@
-#whatsapp profile
-*whatsapp_nabike/*
-*whatsapp_33sushihouse/*
-*whatsapp_nomadbitcoin/*
-*whatsapp_cueca/*
-*whatsapp_zilbarbearia/*
-
+*profiles/*
+*webdriver/*
 
 #jupyter files
 *.ipynb_checkpoints/*
