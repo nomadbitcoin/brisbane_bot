@@ -1,5 +1,4 @@
 *profiles/*
-*webdriver/*
 
 #jupyter files
 *.ipynb_checkpoints/*
