@@ -1,15 +1,17 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # coding: utf-8
 
-# In[22]:
+# In[1]:
 
 
 import time
 import platform
 from datetime import datetime
+from sys import stdout
+import history
 
 
-# In[4]:
+# In[2]:
 
 
 from selenium import webdriver
@@ -17,7 +19,13 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.keys import Keys
 
 
-# In[20]:
+# In[3]:
+
+
+wait = 3
+
+
+# In[4]:
 
 
 # INSTANCE BROWSER
@@ -72,7 +80,7 @@ def wait_connection(driver):
             pass
 
 
-# In[6]:
+# In[5]:
 
 
 def findUnreadChats():
@@ -89,20 +97,21 @@ def findUnreadChats():
     return unread_chats
 
 
-# In[7]:
+# In[6]:
 
 
 def findUnsavedContacts(unread_chats):
-    # FILTRA CONTATOS NAO SALVOS DAS CONVERSAS NAO LIDAS
+    # FILTRA CONTATOS NAO SALVOS DAS CONVERSAS NAO LIDAS E VERIFICA SE JA CONVERSOU
     unsaved_contact = []
     for chat in unread_chats:
         chat_title = chat.find_element_by_class_name('_19RFN').text
-        if chat_title.startswith('+'):
-            unsaved_contact.append(chat)
-    return unsaved_contact if unsaved_contact != [] else False
+        if chat_title.startswith('+') and not verifyTalked(chat_title):
+#             unsaved_contact.append(chat)
+            return chat
+    return False
 
 
-# In[8]:
+# In[7]:
 
 
 def verifyChats():
@@ -113,15 +122,16 @@ def verifyChats():
     return True if unread_chats != False and findUnsavedContacts(unread_chats) != False else False
 
 
-# In[9]:
+# In[8]:
 
 
-def verifyHistory():
+def verifyHistory(unsaved_contact):
     '''
         Verifica o historico da conversa se eh uma conversa nova ou nao
     '''
-    
-    engine_messages = ['Messages you send to this chat and calls are secured with end-to-end encryption. Click for more info.']
+    unsaved_contact.click()
+    engine_messages = ['Messages you send to this chat and calls are secured with end-to-end encryption. Click for more info.',
+                      'As mensagens e as chamadas dessa conversa são protegidas com a criptografia de ponta a ponta. Clique para mais informações.']
     
     history = driver.find_elements_by_class_name('FTBzM')
     
@@ -132,7 +142,7 @@ def verifyHistory():
     return False
 
 
-# In[10]:
+# In[9]:
 
 
 def selectChat(contact):
@@ -143,8 +153,13 @@ def selectChat(contact):
         #na caixa de pesquisa digita o nome do contato
         search_box = driver.find_element_by_class_name('_2zCfw')
         search_box.click()
+        search_box.send_keys(Keys.CONTROL + 'a')
+        search_box.send_keys(Keys.BACKSPACE)
         search_box.send_keys(contact)
         time.sleep(wait)
+        
+        #talvez isso aqui possa dar pau, verificar
+        chat_name = contact
         
         #seleciona o contato
         for contact in driver.find_elements_by_class_name('_19RFN'):
@@ -157,7 +172,7 @@ def selectChat(contact):
         return False
 
 
-# In[11]:
+# In[10]:
 
 
 def openMainChat():
@@ -179,7 +194,7 @@ def openMainChat():
         return False
 
 
-# In[12]:
+# In[11]:
 
 
 def sendFirstMessages():
@@ -208,7 +223,7 @@ def sendFirstMessages():
         return False
 
 
-# In[13]:
+# In[12]:
 
 
 def sendOtherMessages():
@@ -230,6 +245,32 @@ def sendOtherMessages():
                 time.sleep(3)
                 send_text_box.send_keys(Keys.ENTER)
         return True
+    except Exception as error:
+        print(type(error), error)
+        return False
+
+
+# In[13]:
+
+
+def sendRemarketingMessages(message_type):
+    '''
+        Envia mensagens de remarketing, ha tipos de contatos possiveis:
+        
+        1 - Nao respondeu nenhuma vez,  
+    '''
+    type_1 = 'Seu feedback é muito importante para mim. O que achou da nossa proposta? Ficou fora da sua expectativa, ainda tem dúvidas, etc? Poderíamos agendar um horário para conversarmos? O que acha da ideia?'
+    
+    try:
+        if message_type == 1:
+            send_text_box = driver.find_element_by_class_name('_3u328')
+
+            send_text_box.click()
+            #envia a primeira mensagem
+            send_text_box.send_keys(type_1)
+            time.sleep(3)
+            send_text_box.send_keys(Keys.ENTER)
+            return True
     except Exception as error:
         print(type(error), error)
         return False
@@ -316,88 +357,219 @@ def forwardContent(message, contact_to_send):
             return False
 
 
-def saveTalked(chat_name):
+# In[17]:
+
+
+def saveTalked(chat_name, step):
     '''
         salva os contatos que ja foram atendidos
     '''
-    with open('talked_chats.txt', 'a') as filee:
-        filee.write(chat_name + '\n')
-    return True
-
-def verifyTalked(chat_name):
+    if step == 1:
+        #salva os contatos com os quais ja falou/fez o antendimento
+        with open('talked_chats.txt', 'a') as filee:
+            filee.write(chat_name + '\n')
+        return True
+    elif step == 2:
+        #salva os contatos que ja fez o remarketing
+        with open('remarketed.txt', 'a') as filee:
+            filee.write(chat_name + '\n')
+        return True
+    elif step == 3:
+        #salva os contatos que ja verificou se precisam de remarketing
+        with open('remarket_verified.txt', 'a') as filee:
+            filee.write(chat_name + '\n')
+        return True
+    
+def verifyTalked(chat_name=None, get_list=False):
     '''
         Verifica se ja conversou com aquele contato antes
     '''
     with open('talked_chats.txt', 'r') as filee:
         talked = filee.read().split('\n')
     
-    return True if chat_name in talked else False
+    if chat_name != None:
+        return True if chat_name in talked else False
+    elif get_list != False:
+        return talked
 
 
+# In[18]:
 
 
-# In[21]:
+def verifyRemarketed(step):
+    '''
+        Devolve a lista de contatos que ja foram feitos remarketing
+    '''
+    if step == 1:
+        #devolve a lista dos que foi feito remarketing
+        with open('remarketed.txt', 'r') as filee:
+             remarketed_list = filee.read().split('\n')
+        return remarketed_list
+    elif step == 2:
+        #devolve a lista dos que ja foi verificado se precisa de remarketing
+        with open('remarket_verified.txt', 'r') as filee:
+             remarket_verified = filee.read().split('\n')
+        return remarket_verified
 
 
-openBrowser('nomadbitcoin')
+# In[19]:
+
+
+def responseNewClients():
+    try:
+        #verifica se ha conversas nao lidas com contatos nao salvos
+        unsaved_contact = findUnsavedContacts(findUnreadChats())
+        if verifyChats() and unsaved_contact != False:
+            # se houver, ira clicar em cada um deles e verifica o historico 
+            chat_name = unsaved_contact.find_element_by_class_name('_19RFN').text
+
+            if not verifyTalked(chat_name) and verifyHistory(unsaved_contact):
+                time.sleep(wait)
+                #envia as primeiras mensagens
+                sendFirstMessages()
+                time.sleep(wait)
+
+                #abre a conversa principal onde ha o conteudo a ser encaminhado e envia o audio
+                if openMainChat():
+                    time.sleep(wait)
+                    sendAudioFile(chat_name)
+                    time.sleep(20)
+
+                if openMainChat():
+                    time.sleep(wait)
+                    sendVideo(chat_name)
+                    time.sleep(30)
+
+                if openMainChat():
+                    time.sleep(wait)
+                    sendImage(chat_name)
+                    time.sleep(10)
+
+                #envia as outras mensagens de texo
+                sendOtherMessages()
+
+                #verifica se o audio foi vizualizado e entao encaminha o video
+                print('contato novo atendido - {}'.format(chat_name))
+                saveTalked(chat_name, 1)
+#                 report.append({chat_name:datetime.now().strftime('%d/%m/%y %H:%M:%S')})
+                return True
+        return True            
+    except KeyboardInterrupt:
+        do = input('\n\nDeseja parar o Autoatendimento? \nDigite 1 ou "sim" para parar, ou qualquer outra tecla para continuar\n:')
+        if do == 'sim' or do == '1':
+            return False
+    except Exception as error:
+        print(type(error), error)
+        return False
+
+
+# In[20]:
+
+
+def verifyNeedRemarketing():
+    '''
+        Ira verificar o historico e verificar se deve ser mandado a mensagem de remarketin
+    '''
+    received = 0
+    messages_to_revise = messagesToRevise()
+    if messages_to_revise != None:
+        for message in messages_to_revise:
+            if message['status'] == 'received':
+                received +=1
+        if received <=0:
+            return True, 1
+        else:
+            return False, 0
+
+def messagesToRevise():
+    '''
+        Ira encontrar a ultima mensagem enviada pelo bot e retornar o que ha dali em diante
+    '''
+    history_functions = history.history_messages(driver)
+    full_history = history_functions.getContent(need_scroll=False)
+    
+    for days in full_history:
+        for day in days.keys():
+            messages = days[day]
+            for num, message in enumerate(messages):
+                if 'Qualquer dúvida me chama, vou amar conversar com vc!' in message['content']:
+                    #se encontrar a ultima mensagem pelo bot ira salvar o que tiver dali pra frente para verificar
+                    return messages[num:]
+    return None
+
+
+# In[27]:
+
+
+# ABRIR A CONVERSA COM TODOS QUE JA FALOU E VERIFICAR SE FOI RESPONDIDO
+def verifyNewClients():
+    talked = verifyTalked(get_list=True)
+    remarketed = verifyRemarketed(1)
+    verified_remarket = verifyRemarketed(2)
+    
+    try:
+        for contact_talked in talked:
+            if contact_talked not in verified_remarket and contact_talked not in remarketed:
+                
+                selectChat(contact_talked)
+            
+                contact_verified = verifyNeedRemarketing()
+                
+                if contact_verified != None and contact_verified[0] == True: 
+                    #primeiro item da lista eh True ou False e o segundo item eh o tipo de mensagem a ser enviada
+                    sendRemarketingMessages(contact_verified[1])
+                    print('remarketing enviado para: {}'.format(contact_talked))
+                    saveTalked(contact_talked, 2)
+                else:
+                    saveTalked(contact_talked, 3)
+                
+        return True
+    except KeyboardInterrupt:
+        do = input('\n\nDeseja parar o Remarketing? \nDigite 1 ou "sim" para parar, ou qualquer outra tecla para continuar\n:')
+        if do == 'sim' or do == '1':
+            return False
+    except Exception as error:
+        print('\nError ___ >>> Remarketing <<< ___ [function: verifyNewClients()]\n')
+        print(type(error), error)
+        return False
+
+
+# In[28]:
+
+
+openBrowser('carmenkussler')
 
 
 # In[ ]:
 
 
 working = True
-talked = []
-report = []
-wait = 5
 while working:
-    try:
-        #verifica se ha conversas nao lidas com contatos nao salvos
-        if verifyChats() and findUnsavedContacts(findUnreadChats()) != False:
-            # se houver, ira clicar em cada um deles e verifica o historico 
-            for unsaved_contact in findUnsavedContacts(findUnreadChats()):
-                chat_name = unsaved_contact.find_element_by_class_name('_19RFN').text
-                unsaved_contact.click()
-                if verifyHistory() and not verifyTalked(chat_name):
-                    #envia as primeiras mensagens
-                    sendFirstMessages()
-                    time.sleep(wait)
-                    
-                    #abre a conversa principal onde ha o conteudo a ser encaminhado e envia o audio
-                    if openMainChat():
-                        time.sleep(wait)
-                        sendAudioFile(chat_name)
-                        time.sleep(wait)
-                    
-                    if openMainChat():
-                        time.sleep(wait)
-                        sendVideo(chat_name)
-                        time.sleep(wait)
-                        
-                    if openMainChat():
-                        time.sleep(wait)
-                        sendImage(chat_name)
-                        time.sleep(wait)
-                    
-                    #envia as outras mensagens de texo
-                    sendOtherMessages()
-                    
-                    #verifica se o audio foi vizualizado e entao encaminha o video
-                    print('{} contato novo atendido - {}'.format(datetime.now().strftime('%d/%m/%y %H:%M:%S'), chat_name))
-                    saveTalked(chat_name)
-                    report.append({chat_name:datetime.now().strftime('%d/%m/%y %H:%M:%S')})
-                    # working = False
-                    
-    except KeyboardInterrupt:
-        do = input('Deseja parar o Autoatendimento? \nDigite 1 ou "sim" para parar, ou qualquer outra tecla para continuar\n:')
-        if do == 'sim' or do == '1':
-            print('parando...')
-            working = False
-        else:
-            print('continuando....')
-            pass
+    # stdout.write('\r conferindo se está tudo ok... \n')
+    if not responseNewClients():
+        print('\nStopped ___ >>> Responder Novos Clientes <<< ___ [function: responseNewClients()]')
+        working = False
+
+#     stdout.write('\r Novos Clientes ok! \n')
+#     if not verifyNewClients():
+#         print('\nStopped ___ >>> Remarketing <<< ___ [function: verifyNewClients()]')
+#         working = False
+# #     stdout.write('\r Remarketing ok! \n')
 
 
 # In[ ]:
+
+
+
+
+
+# In[24]:
+
+
+# SALVAR DATA DE QUANDO FALOU COM O CONTATO E VERIFICAR APOS DOIS DIAS SE EH NECESSARIO FAZER REMARKETING
+
+
+# In[25]:
 
 
 #adicionar um marcador
