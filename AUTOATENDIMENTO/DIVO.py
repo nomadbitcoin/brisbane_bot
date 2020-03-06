@@ -142,7 +142,7 @@ def verifyHistory(unsaved_contact):
     return False
 
 
-# In[9]:
+# In[57]:
 
 
 def selectChat(contact):
@@ -151,7 +151,7 @@ def selectChat(contact):
     '''
     try:
         #na caixa de pesquisa digita o nome do contato
-        search_box = driver.find_element_by_class_name('_2zCfw')
+        search_box = driver.find_element_by_class_name('_3u328')
         search_box.click()
         search_box.send_keys(Keys.CONTROL + 'a')
         search_box.send_keys(Keys.BACKSPACE)
@@ -172,7 +172,7 @@ def selectChat(contact):
         return False
 
 
-# In[10]:
+# In[59]:
 
 
 def openMainChat():
@@ -194,7 +194,7 @@ def openMainChat():
         return False
 
 
-# In[11]:
+# In[40]:
 
 
 def sendFirstMessages():
@@ -205,7 +205,8 @@ def sendFirstMessages():
     message2 = 'Vou te explicar tudo ...'
     
     try:
-        send_text_box = driver.find_element_by_class_name('_3u328')
+        footer = driver.find_element_by_class_name('_1N6pS')
+        send_text_box = footer.find_element_by_class_name('_3u328')
 
         send_text_box.click()
         #envia a primeira mensagem
@@ -223,7 +224,7 @@ def sendFirstMessages():
         return False
 
 
-# In[12]:
+# In[44]:
 
 
 def sendOtherMessages():
@@ -237,7 +238,8 @@ def sendOtherMessages():
     
     try:
         for message in messages:
-                send_text_box = driver.find_element_by_class_name('_3u328')
+                footer = driver.find_element_by_class_name('_1N6pS')
+                send_text_box = footer.find_element_by_class_name('_3u328')
 
                 send_text_box.click()
                 #envia a primeira mensagem
@@ -313,6 +315,22 @@ def sendVideo(contact_to_send):
         except Exception as error:
     #         print(type(error), error)
             pass
+    
+def sendImage(contact_to_send):
+    '''
+        Encontra o video e passa para a funcao encaminhar
+    '''
+    # envia o video
+    messages = driver.find_elements_by_class_name('FTBzM')
+    for message in messages:
+        try:
+            message.find_element_by_tag_name('img')
+            if forwardContent(message, contact_to_send):
+                return True
+        except Exception as error:
+#             print(type(error), error)
+            pass
+    return False
 
 
 # In[15]:
@@ -412,7 +430,7 @@ def verifyRemarketed(step):
         return remarket_verified
 
 
-# In[19]:
+# In[49]:
 
 
 def responseNewClients():
@@ -498,7 +516,7 @@ def messagesToRevise():
     return None
 
 
-# In[27]:
+# In[21]:
 
 
 # ABRIR A CONVERSA COM TODOS QUE JA FALOU E VERIFICAR SE FOI RESPONDIDO
@@ -534,7 +552,7 @@ def verifyNewClients():
         return False
 
 
-# In[28]:
+# In[62]:
 
 
 openBrowser('carmenkussler')
